@@ -1,6 +1,4 @@
-// 2/23/2024 11:50 
-// ^ Latest Date Change
-// pre-processor directives
+
 #include <iostream> 
 #include <fstream>
 #include <sstream>
@@ -306,7 +304,6 @@ void View_Profile(){
 	    }
     }
 	profile_output.close();    
-    Main_Menu(); 
 }
 
 void TIN () //This function will display the TIN number and the details of the user
