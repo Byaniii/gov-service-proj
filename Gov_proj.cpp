@@ -7,11 +7,14 @@
 #include <string>
 #include <cctype>
 #include <stdlib.h>
+#include <cstdio>
+#include <algorithm>
 using namespace std;
 
-int tin;
+int tin, profile_count = 0;
 double monthly1Salary = 0;
 
+bool validSalary(const string& input);
 void Start_Menu();
 void Main_Menu();
 void registration();
@@ -22,14 +25,18 @@ void View_Profile();
 void TIN();
 double thirteenmonthpay(double salary);
 double annual_salary(double salary);
-double taxable_income(double ms);	
 double tax_incomeTable(int choose, double ms, double thirteenmonthpay);
-double regular_Tax(double monthly1Salary, double tmp, double TI, double AS);
+double regular_Tax(double monthly1Salary, double tmp, double AS);
+double valueAddedTax();
+double partTimefullTimeTax();
+double combinedTax();
+long corporateTax();
 
 struct Profile{
 	string name, address, phone_number;
 	double monthly1salary;
 };
+
 
 int main(){
 
@@ -39,7 +46,7 @@ int main(){
 }
 
 void Start_Menu(){ // Display Starting Menu
-    system("clear");
+    system("cls");
     system("color 03");
     int option;
     cout << "=================Program  Name=================\n"; // Name of Program
@@ -67,40 +74,51 @@ void Start_Menu(){ // Display Starting Menu
 }
 
 void Main_Menu(){ // Main Menu Display
-    system("clear");
+    system("cls");
     system("color 03");
     int option;
     cout << "[1] TAX CALCULATOR\n";
-    cout << "[2] Generate Tin\n";
-    cout << "[3] VIEW PROFILE\n";
-    cout << "[4] LOG-OUT\n";
+    cout << "[2] PART/FULL TIME TAX\n";
+    cout << "[3] VALUE ADDED TAX\n";
+    cout << "[4] TIN\n";
+    cout << "[5] VIEW PROFILE\n";
+    cout << "[6] LOGOUT\n";
+    cout << "[7] CORPORATE TAX\n";
     cout << "Enter option: ";
     cin >> option;
     switch(option){
         case 1:
-            regular_Tax(monthly1Salary, 0, 0, 0);
+            regular_Tax(monthly1Salary, 0, 0);
             break;
         case 2:
-            TIN();
+            partTimefullTimeTax();
             break;
         case 3:
-            View_Profile();
+            valueAddedTax();
             break;
         case 4:
+            TIN();
+            break;
+        case 5:
+            View_Profile();
+            break;
+        case 6:
             Start_Menu();
+            break;
+        case 7:
+            corporateTax();
             break;
     }
 }
 
 void registration(){
-    system("clear"); // clears system terminal
-    system("color 04");
+    system("cls"); // clss system terminal
     ofstream UsernameInput("Usernames.txt", ios::app); // opens Usernames text file to append user input 
 
     string Register_Username, RegisterPassword;
     bool valid = false;
 
-    cin.ignore(1, '\n'); // clears input buffer/queue
+    cin.ignore(1, '\n'); // clss input buffer/queue
     cout << "Register Username: ";
     getline(cin, Register_Username); // Registration for username
 
@@ -130,7 +148,7 @@ void registration(){
             }
         } // password turns valid if it meets criteria
         if (Capital & Number & !WhiteSpace){
-            system("clear");
+            system("cls");
             PasswordInput << RegisterPassword <<'\n';
             system("Color 03");
             cout << "\nSuccessfully registered " << Register_Username <<'!'<<endl;
@@ -147,10 +165,11 @@ void registration(){
 }
 
 void login(){ // Log-in Function
-    system("clear");
+    system("cls");
     system("color 03");
     string UserName, UserPassword, UserComparison, PasswordComparison, UserData, PasswordData;
     bool found = false;
+    profile_count = 0;
 
     ifstream users("Usernames.txt"), passwords("Passwords.txt"); // opens "Usernames" and "Passwords" text file for reading
     cin.ignore (1, '\n');
@@ -161,23 +180,25 @@ void login(){ // Log-in Function
     getline(cin, UserPassword);
     
     while(getline(users, UserData) && getline(passwords, PasswordData)){ // retrieves line from text file
+        profile_count++;
         istringstream issUser(UserData), issPass(PasswordData); 
         while(issUser >> UserComparison && issPass >> PasswordComparison){ 
             if (UserName == UserComparison && UserPassword == PasswordComparison){ // Compares user input with text file data base
-                system("clear");
+                system("cls");
                 cout << "Welcome " << UserName <<"!"<<endl;
                 found = true;
             }
         }
     }  
-    if (!found){
-        system("clear");
+    if (found){
+        Main_Menu();
+
+    }
+    else if(found){
+        system("cls");
         system("color 04");
         cout << "\nUsername/Password not found!";
         IncorrectLogin();
-    }
-    else if(found){
-        Main_Menu();
     }    
 }
 
@@ -196,19 +217,41 @@ void IncorrectLogin(){ // If the user enters non-existent/incorrect credentials
             Start_Menu();
             break;
         default:
-            system("clear");
+            system("cls");
             system("color 04");
             cout << "\nPlease enter a valid option!\n";
             IncorrectLogin();
     }
 }
+bool ValidSalary(const string& input) //This function checks if the input is a valid number
+{   
+    if (input.empty())
+    {
+        return false;
+    }
+
+    for (const char& ch : input) {
+        if (!(isdigit(ch) || ispunct(ch) || ch == '(' || ch == ')' || isspace(ch) || ch == '!')) {
+            return false;
+        }
+    }
+
+    size_t decimalCount = count(input.begin(), input.end(), '.') + count(input.begin(), input.end(), ',');
+    return decimalCount <= 1;
+}
 void register_profile(){
 	Profile profile;
-	string user_input;
-	ofstream profile_input("profiles.txt", ios::app);
+	string user_Input;
+	ofstream profile_input("profiles.txtwwa", ios::app);
 	
 	cout << "Enter Your name: ";
 	getline(cin, profile.name);
+    while(profile.name.find_first_not_of(' ') == string::npos){
+        cout <<'\n';
+        cout << "Enter Your name: ";
+	    getline(cin, profile.name);
+    }
+    
 	
 	cout << "Enter your Address: ";
 	getline(cin, profile.address);
@@ -216,20 +259,34 @@ void register_profile(){
 	cout << "Enter your Phone Number: ";
 	getline(cin, profile.phone_number);
 	
-	cout << "Enter your Monthly Salary: ";
-	cin >> profile.monthly1salary;
-	
+    do {
+        cout << "Enter your Monthly Salary: ";
+        getline(cin, user_Input);
+
+        if (!ValidSalary(user_Input))
+        {
+            cout << "Invalid input! Please enter a valid number!" << endl;
+        }
+        else
+        {
+            istringstream(user_Input) >> profile.monthly1salary;
+            break;
+        }
+
+    } while (true);
+    
 	profile_input << profile.name <<endl<< profile.address <<endl<< profile.phone_number <<endl<< profile.monthly1salary<<endl;
 	profile_input.close();
     Main_Menu();
 }
 
 void View_Profile(){
-    system("clear");
+    system("cls");
 	string output, tempfile2;
     int count = 0;
 	ifstream profile_output("profiles.txt");
 	while(getline(profile_output,output)){
+        if (count < 4){
         switch(count){
             case 0:
             cout << "Name: ";
@@ -246,8 +303,10 @@ void View_Profile(){
         }
         cout << output << endl;
         count ++;
-	}
-	profile_output.close();     
+	    }
+    }
+	profile_output.close();    
+    Main_Menu(); 
 }
 
 void TIN () //This function will display the TIN number and the details of the user
@@ -277,14 +336,6 @@ double thirteenmonthpay(double salary){
 double annual_salary(double salary){
     int x = salary * 12;
     return x;
-}
-double taxable_income(double ms)
-{
-    const double sss = 1350;
-    const double pagIbig = 100;
-    const double philHealth = ms * 0.025;
-    double monthlyTax = ms - (sss + pagIbig + philHealth);
-    return monthlyTax;
 }
 double tax_incomeTable(int choose, double ms, double thirteenmonthpay) //This function represents the latest tax table from BIR
 {
@@ -359,26 +410,194 @@ double tax_incomeTable(int choose, double ms, double thirteenmonthpay) //This fu
     }
     return 0;
 }
-double regular_Tax(double monthly1Salary, double tmp, double TI, double AS)
+
+double regular_Tax(double monthly1Salary, double tmp, double AS)
 {
-    int choice;
+    string line, tempvar;
+    int choice, count = 0;
     cout << "Choice:" << endl; // Asks for user choice
-	cout << "1 - Monthly Tax" << endl;
+	cout << "1 - Monthly Tax" << endl; 
 	cout << "2 - Annual  Tax" << endl;
 	do
 	{
 		cout << "Enter your choice: ";
 		cin >> choice;
 	} while (choice != 1 && choice != 2);
-	tmp = thirteenmonthpay(monthly1Salary);
-				
-	TI = taxable_income(monthly1Salary);
-				
-	AS = annual_salary(monthly1Salary);
-				
-	cout << "\n"; //Displays output of the entire program
-	cout << "Monthly Salary: " << monthly1Salary << endl;
-	cout << "Your taxable monthly income is: " << TI << endl;
-	cout << "Your annual salary: " << AS << endl;
-	cout << tax_incomeTable(choice, monthly1Salary, tmp) << endl;
+
+    ifstream MonthlySalaryOutput("profiles.txt");
+    while(getline(MonthlySalaryOutput, line)){
+        if(count == profile_count){
+            cout << "hello world";
+        }
+        count++;
+        
+    }
+    cout << profile_count << " " << count;
+
+tmp = thirteenmonthpay(monthly1Salary);
+                
+AS = annual_salary(monthly1Salary);      
+cout << "\n"; //Displays output of the entire program
+cout << "Monthly Salary: " << monthly1Salary << endl;
+cout << "Your annual salary: " << AS << endl;
+cout << tax_incomeTable(choice, monthly1Salary, tmp) << endl;
+}
+
+double valueAddedTax()
+{
+    double product;
+    cout << "Enter the price of the product: ";
+    cin >> product;
+    double x = product * 0.12;
+    cout << "The value added tax of the product is: " << x << endl;
+    return x;
+}
+
+double partTimefullTimeTax()
+{
+    float annual_halfpartTimeFulltime_salary;
+    double salary1, salary2, halfannual1Salary, halfannual2Salary, fullannualSalary, full_Salary, totalSalary;
+    cout << "Enter your full-time salary: ";
+    cin >> salary1;
+    cout << "Enter your part-time salary: ";
+    cin >> salary2;
+    totalSalary = salary1 + salary2;
+    thirteenmonthpay(totalSalary);
+    fullannualSalary = salary1 * 12;
+    salary1 *= 6;
+    salary2 *= 6;
+    annual_halfpartTimeFulltime_salary = salary1 + salary2;
+    cout << "Your annual salary is: " << annual_halfpartTimeFulltime_salary << endl;
+
+    cout << "Your Tax due is: " << endl;
+    if (annual_halfpartTimeFulltime_salary>=8000000)
+    {
+        double x = ((annual_halfpartTimeFulltime_salary - 8000000) * 0.35) + 2410000;
+        return x;
+    }
+    
+    else if (annual_halfpartTimeFulltime_salary<=8000000 && annual_halfpartTimeFulltime_salary>=2000000)
+    {
+        double x = ((annual_halfpartTimeFulltime_salary - 2000000) * 0.32) + 490000;
+        return x;
+    }
+    
+    else if (annual_halfpartTimeFulltime_salary<=2000000 && annual_halfpartTimeFulltime_salary>=800000)
+    {
+        double x = ((annual_halfpartTimeFulltime_salary - 800000) * 0.30) + 130000;
+        return x;
+    }
+    
+    else if (annual_halfpartTimeFulltime_salary<=800000 && annual_halfpartTimeFulltime_salary>=400000)
+    {
+        double x = ((annual_halfpartTimeFulltime_salary - 400000) * 0.25) + 30000;
+        return x;
+    }
+    else if (annual_halfpartTimeFulltime_salary<=400000 && annual_halfpartTimeFulltime_salary>=250000)
+    {
+        double x = ((annual_halfpartTimeFulltime_salary - 250000) * 0.20);
+        return x;
+    }
+    else
+    {
+        cout<<"No withholding tax." << endl;
+        return 0;
+    }
+}
+
+long corporateTax()
+{
+    int option;
+    long net_Sales, gross_Sales, gross_Income, allowable_Deductions, net_Income, mcit;
+    cout << "Enter the net sales: ";
+    cin >> net_Sales;
+    cout << "Enter the gross sales: ";
+    cin >> gross_Sales;
+    cout << "Enter the allowable deductions: ";
+    cin >> allowable_Deductions;
+
+    gross_Income = net_Sales - gross_Sales;
+    net_Income = gross_Income - allowable_Deductions;
+
+    cout << "Enter the tax option: " << endl;
+    cout << "[1] Domestic Corporation" << endl;
+    cout << "[2] Resident Foreign Corporation" << endl;
+    cout << "[3] Non-Resident Foreign Corporation" << endl;
+    cout << "[4] Offshore Banking Units (OBU's)" << endl;
+    cout << "[5] Regional Operating Headquarters (ROHQ)" << endl;
+    cin >> option;
+
+
+    switch (option)
+    {
+        case 1:
+            if (net_Income > 100000000)
+            {
+                long x = (net_Income * 0.25);
+                cout << "Your corporate tax is: " << x << endl;
+                return x;
+            }
+            else if (net_Income <= 100000000 && net_Income >= 5000000)
+            {
+                long x = (net_Income * 0.20);
+                cout << "Your corporate tax is: " << x << endl;
+                return x;
+            }
+            else
+            {
+                cout << "No withholding Tax.";
+                return 0;
+            }
+        case 2:
+            if (net_Income > 1000000000)
+            {
+                long x = (net_Income * 0.25);
+                cout << "Your corporate tax is: " << x << endl;
+                return x;
+            }
+            else
+            {
+                cout << "No withholding Tax.";
+                return 0;
+            }
+        case 3:
+            if (net_Income > 100000000)
+            {
+                long x = (net_Income * 0.25);
+                cout << "Your corporate tax is: " << x << endl;
+                return x;
+            }
+            else
+            {
+                cout << "No withholding Tax.";
+                return 0;
+            }
+        case 4:
+            if (net_Income > 100000000)
+            {
+                long x = (net_Income * 0.25);
+                cout << "Your corporate tax is: " << x << endl;
+                return x;
+            }
+            else
+            {
+                cout << "No withholding Tax.";
+                return 0;
+            }
+        case 5:
+            if (net_Income > 100000000)
+            {
+                long x = (net_Income * 0.25);
+                cout << "Your corporate tax is: " << x << endl;
+                return x;
+            }
+            else
+            {
+                cout << "No withholding Tax.";
+                return 0;
+            }
+        default:
+            cout << "Invalid option.";
+            return 0;
+    }
 }
