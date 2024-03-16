@@ -1,4 +1,4 @@
-TITEEE 
+
 #include <iostream> 
 #include <fstream>
 #include <sstream>
@@ -187,17 +187,17 @@ void login(){ // Log-in Function
                 found = true;
             }
         }
+        if (found){
+            break;
+        }
     }  
-    if (found){
-        Main_Menu();
-
-    }
-    else if(found){
+    if(!found){
         system("cls");
         system("color 04");
         cout << "\nUsername/Password not found!";
         IncorrectLogin();
-    }    
+    }
+    Main_Menu();    
 }
 
 void IncorrectLogin(){ // If the user enters non-existent/incorrect credentials
@@ -240,7 +240,7 @@ bool ValidSalary(const string& input) //This function checks if the input is a v
 void register_profile(){
 	Profile profile;
 	string user_Input;
-	ofstream profile_input("profiles.txtwwa", ios::app);
+	ofstream profile_input("profiles.txt", ios::app);
 	
 	cout << "Enter Your name: ";
 	getline(cin, profile.name);
@@ -275,7 +275,7 @@ void register_profile(){
     
 	profile_input << profile.name <<endl<< profile.address <<endl<< profile.phone_number <<endl<< profile.monthly1salary<<endl;
 	profile_input.close();
-    Main_Menu();
+    Start_Menu();
 }
 
 void View_Profile(){
@@ -411,7 +411,7 @@ double tax_incomeTable(int choose, double ms, double thirteenmonthpay) //This fu
 double regular_Tax(double monthly1Salary, double tmp, double AS)
 {
     string line, tempvar;
-    int choice, count = 0;
+    int choice, count = 0, tempint;
     cout << "Choice:" << endl; // Asks for user choice
 	cout << "1 - Monthly Tax" << endl; 
 	cout << "2 - Annual  Tax" << endl;
@@ -420,16 +420,14 @@ double regular_Tax(double monthly1Salary, double tmp, double AS)
 		cout << "Enter your choice: ";
 		cin >> choice;
 	} while (choice != 1 && choice != 2);
-
+    tempint = profile_count * 4;
     ifstream MonthlySalaryOutput("profiles.txt");
     while(getline(MonthlySalaryOutput, line)){
-        if(count == profile_count){
-            cout << "hello world";
-        }
         count++;
-        
+        if (count == tempint){
+            monthly1Salary = stod(line);            
+        }
     }
-    cout << profile_count << " " << count;
 
 tmp = thirteenmonthpay(monthly1Salary);
                 
