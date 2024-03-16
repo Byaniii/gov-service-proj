@@ -117,9 +117,12 @@ void registration(){
     bool valid = false;
 
     cin.ignore(1, '\n'); // clss input buffer/queue
-    cout << "Register Username: ";
-    getline(cin, Register_Username); // Registration for username
-
+    while(Register_Username.find_first_not_of(' ') == string::npos){
+        cout <<'\n';
+        cout << "Register Username(Input must not be empty): ";
+	    getline(cin, Register_Username);
+        system("cls");
+    }
     UsernameInput << Register_Username << "\n"; // Input Username into the text file
 
     UsernameInput.close(); // closes Usernames text file
@@ -221,42 +224,49 @@ void IncorrectLogin(){ // If the user enters non-existent/incorrect credentials
             IncorrectLogin();
     }
 }
-bool ValidSalary(const string& input) //This function checks if the input is a valid number
+bool ValidSalary(string input) //This function checks if the input is a valid number
 {   
     if (input.empty())
     {
         return false;
     }
 
-    for (const char& ch : input) {
-        if (!(isdigit(ch) || ispunct(ch) || ch == '(' || ch == ')' || isspace(ch) || ch == '!')) {
+    for (int i = 0; i < input.length(); i++){
+        if(ispunct(input[i]) || isspace(input[i]) || isalpha(input[i])){
             return false;
         }
+        else{
+            return true;
+        }
     }
-
-    size_t decimalCount = count(input.begin(), input.end(), '.') + count(input.begin(), input.end(), ',');
-    return decimalCount <= 1;
 }
 void register_profile(){
 	Profile profile;
 	string user_Input;
 	ofstream profile_input("profiles.txt", ios::app);
-	
-	cout << "Enter Your name: ";
-	getline(cin, profile.name);
+
     while(profile.name.find_first_not_of(' ') == string::npos){
+        system("cls");
         cout <<'\n';
-        cout << "Enter Your name: ";
+        cout << "Enter Your name(Must not be empty): ";
 	    getline(cin, profile.name);
     }
-    
-	
-	cout << "Enter your Address: ";
-	getline(cin, profile.address);
-	
-	cout << "Enter your Phone Number: ";
-	getline(cin, profile.phone_number);
-	
+    while(profile.address.find_first_not_of(' ') == string::npos){
+        system("cls");
+        cout <<'\n';
+        cout << "Enter Address(Must not be empty): ";
+	    getline(cin, profile.address);
+        
+    }	
+
+	while(profile.phone_number.find_first_not_of(' ') == string::npos){
+        system("cls");
+        cout <<'\n';
+        cout << "Enter Phone Number(Must not be empty): ";
+	    getline(cin, profile.phone_number);
+        
+    }
+
     do {
         cout << "Enter your Monthly Salary: ";
         getline(cin, user_Input);
