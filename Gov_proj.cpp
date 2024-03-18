@@ -123,6 +123,7 @@ void registration(){
 	    getline(cin, Register_Username);
         system("cls");
     }
+    
     UsernameInput << Register_Username << "\n"; // Input Username into the text file
 
     UsernameInput.close(); // closes Usernames text file
@@ -226,6 +227,7 @@ void IncorrectLogin(){ // If the user enters non-existent/incorrect credentials
 }
 bool ValidSalary(string input) //This function checks if the input is a valid number
 {   
+    int string_count = 0;
     if (input.empty())
     {
         return false;
@@ -234,11 +236,10 @@ bool ValidSalary(string input) //This function checks if the input is a valid nu
     for (int i = 0; i < input.length(); i++){
         if(ispunct(input[i]) || isspace(input[i]) || isalpha(input[i])){
             return false;
-        }
-        else{
-            return true;
-        }
+        }    
     }
+    return true;
+
 }
 void register_profile(){
 	Profile profile;
@@ -604,5 +605,21 @@ long corporateTax()
         default:
             cout << "Invalid option.";
             return 0;
+    }
+}
+
+bool MatchUsernameDataBase(string username){
+    ifstream UsernameOutput("usernames.txt");
+
+    bool found = false;
+    string line;
+    while (getline(UsernameOutput, line)){
+        if(username == line){
+            cout << "hello world";
+            found = true;
+        }
+        if(found){
+        break;
+        }       
     }
 }
