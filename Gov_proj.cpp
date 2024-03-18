@@ -30,6 +30,7 @@ double partTimefullTimeTax();
 double combinedTax();
 long corporateTax();
 
+
 struct Profile{
 	string name, address, phone_number;
 	double monthly1salary;
@@ -115,14 +116,12 @@ void registration(){
 
     string Register_Username, RegisterPassword;
     bool valid = false;
-
-    cin.ignore(1, '\n'); // clss input buffer/queue
-    while(Register_Username.find_first_not_of(' ') == string::npos){
-        cout <<'\n';
+    
+    do{
         cout << "Register Username(Input must not be empty): ";
-	    getline(cin, Register_Username);
+        getline(cin, Register_Username);
         system("cls");
-    }
+    }while(Register_Username);
     
     UsernameInput << Register_Username << "\n"; // Input Username into the text file
 
@@ -619,7 +618,9 @@ bool MatchUsernameDataBase(string username){
             found = true;
         }
         if(found){
-        break;
+            return true;
         }       
     }
+    return false;
 }
+
