@@ -30,10 +30,12 @@ long regular_Tax(long monthly1Salary, long tmp, long AS);
 long valueAddedTax();
 long partTimefullTimeTax();
 long corporateTax();
+long propertyTax();
 bool UserNameValid(string UserInput);
 bool MatchUsernameDataBase(string Username);
 bool ValidPhoneNumber(string UserPhoneNumber);
 void ChooseOption();
+void GenerateTinNumber();
 
 // Struct for User Profile
 struct Profile{
@@ -288,7 +290,7 @@ void register_profile(){
     } while (true);
     
 	profile_input << profile.name <<endl<< profile.address <<endl<< profile.phone_number <<endl<< profile.monthly1salary<<endl;
-    long long AnnualSalaryTax;
+    long AnnualSalaryTax;
     AnnualSalaryTax = annual_salary(profile.monthly1salary);
     profile_input << AnnualSalaryTax<<endl;
     profile_input.close();
@@ -303,8 +305,7 @@ void View_Profile() {
     int linesToPrint = 5; 
     int starting_line = (profile_count - 1) * linesToPrint + 1;  
     while (getline(ProfileOutput, line)) {
-        if (tempcount >= starting_line && tempcount < starting_line + linesToPrint) {
-            
+        if (tempcount >= starting_line && tempcount < starting_line + linesToPrint) {            
             switch (tempcount - starting_line) {
                 case 0:
                     cout << "Name: " << line << endl;
@@ -333,7 +334,7 @@ void View_Profile() {
 
 void ChooseOption(){
     int option;
-    cout << "=================Program  Name=================\n"; // Name of Program
+    cout << "\n=================Program  Name=================\n"; // Name of Program
     cout << "[1] MAIN MENU\n";
     cout << "[2] LOG-OUT\n";
     cout << "Enter option: ";
@@ -362,16 +363,45 @@ void GenerateTinNumber(){
 	int tin3 = rand() % 1000 + 1;
     InputTinNumber << tin1 << "-" << tin2 << "-" << tin3 << "-" << "00000" <<endl;
     InputTinNumber.close();
+    cout << "Your tin number is "<< tin1 << "-" << tin2 << "-" << tin3 << "-" << "00000" <<endl;
     ChooseOption();
 }
 
 
 void TIN () //This function will display the TIN number and the details of the user
 {
+    int tempcount = 1;
+    bool TinFound = false;
     ifstream OutputTinNumber("TinDataBase.txt", ios::app);
     system("cls");
-    
-	//cout << "Your TIN number is: " << tin1 << "-" << tin2 << "-" << tin3 << "-" << "00000" <<endl<< endl;	
+    string line;
+    while (getline(OutputTinNumber, line)) {
+        if (!line.empty() && tempcount == profile_count){
+            cout <<"Your Tin Number is: " << line;
+            TinFound = true;
+        }
+        tempcount++;
+    }
+    if(!TinFound){
+        system("color 04");
+        cout << "It seems you have no Tin Number yet. Would you like to generate one?(y/n): ";
+        system("color 03");
+        char option;
+        cin >> option;
+        switch (option){
+            case 'y': 
+            case 'Y':
+                GenerateTinNumber();
+                break;
+            case 'n':
+            case 'N':
+                ChooseOption();
+        }
+        GenerateTinNumber();
+    }
+    else if(TinFound){
+        ChooseOption();
+    }
 }
 long thirteenmonthpay(long salary){ //This function will calculate the 13th month pay
     if(salary > 90000)
@@ -401,27 +431,27 @@ long tax_incomeTable(int choose, long ms, long thirteenmonthpay) //This function
             if (mS>=666667)
             {
                 long x = ((ms - 666667) * 0.35) + 200833.33;
-                return x;
+                cout << x << endl;
             }
             else if (mS<=666666 && mS>=166667)
             {
                 long x = ((ms - 166667 ) * 0.30) + 40833.33; 
-                return x;
+                cout << x << endl;
             }
             else if (mS<=166667 && mS>= 66667)
             {
                 long x = ((ms - 66667) * 0.25) + 10833.33;
-                return x;
+                cout << x << endl;
             }
             else if (mS<=66666 && mS>=33333)
             {
                 long x = ((ms - 66666) * 0.20) + 2500;
-                return x;
+                cout << x << endl;
             }   
             else if (mS<=33332 && mS>=20833)
             {
                 long x = ((ms - 33332) * 0.15);
-                return x;
+                cout << x << endl;
             }
             else 
             {
@@ -433,27 +463,27 @@ long tax_incomeTable(int choose, long ms, long thirteenmonthpay) //This function
             if (MS>=8000000)
             {
                 long x = ((MS - 8000000) * 0.35) + 2410000;
-                return x;
+                cout << x << endl;
             }
             else if (MS<=8000000 && MS>=2000000)
             {
                 long x = ((MS - 2000000) * 0.32) + 490000;
-                return x;
+                cout << x << endl;
             }
             else if (MS<=2000000 && MS>=800000)
             {
                 long x = ((MS - 800000) * 0.30) + 130000;
-                return x;
+                cout << x << endl;
             }
             else if (MS<=800000 && MS>=400000)
             {
                 long x = ((MS - 400000) * 0.25) + 30000;
-                return x;
+                cout << x << endl;
             }
             else if (MS<=400000 && MS>=250000)
             {
                 long x = ((MS - 250000) * 0.20);
-                return x;
+                cout << x << endl;
             }
             else
             {
@@ -499,8 +529,8 @@ long valueAddedTax()
     cout << "Enter the price of the product: "; // Asks for the price of the product
     cin >> product;
     long x = product * 0.12; // Calculates the value added tax
-    cout << "The value added tax of the product is: " << x << endl; // Displays the value added tax
-    return x; 
+    cout << "The value added tax of the product is: " << x << endl; // Displays the value added tax 
+    ChooseOption();
 }
 
 long partTimefullTimeTax()
@@ -519,33 +549,36 @@ long partTimefullTimeTax()
     annual_halfpartTimeFulltime_salary = salary1 + salary2;
     cout << "Your annual salary is: " << annual_halfpartTimeFulltime_salary << endl; // Displays the annual salary
 
-    cout << "Your Tax due is: " << endl; // Displays the tax due based on criteria
     if (annual_halfpartTimeFulltime_salary>=8000000)
     {
         long x = ((annual_halfpartTimeFulltime_salary - 8000000) * 0.35) + 2410000;
-        cout << x;
+        cout << "Your tax due is: " << x << endl; 
+        cout << x << endl;
     }
-    
     else if (annual_halfpartTimeFulltime_salary<=8000000 && annual_halfpartTimeFulltime_salary>=2000000)
     {
         long x = ((annual_halfpartTimeFulltime_salary - 2000000) * 0.32) + 490000;
-        cout << x<<endl;                                                                                      //Criteria for cout << x;
+        cout << "Your tax due is: " << x << endl;   
+        cout << x << endl;                                                                                //Criteria for cout << x;
     }
     else if (annual_halfpartTimeFulltime_salary<=2000000 && annual_halfpartTimeFulltime_salary>=800000)
     {
         long x = ((annual_halfpartTimeFulltime_salary - 800000) * 0.30) + 130000;
-        cout << x<<endl;
+        cout << "Your tax due is: " << x << endl; 
+        cout << x << endl;
     }
     
     else if (annual_halfpartTimeFulltime_salary<=800000 && annual_halfpartTimeFulltime_salary>=400000)
     {
         long x = ((annual_halfpartTimeFulltime_salary - 400000) * 0.25) + 30000;
-        cout << x<<endl;
+        cout << "Your tax due is: " << x << endl; 
+        cout << x << endl;
     }
     else if (annual_halfpartTimeFulltime_salary<=400000 && annual_halfpartTimeFulltime_salary>=250000)
     {
         long x = ((annual_halfpartTimeFulltime_salary - 250000) * 0.20);
-        cout << x<<endl;
+        cout << "Your tax due is: " << x << endl; 
+        cout << x << endl;
     }
     else
     {
@@ -556,7 +589,13 @@ long partTimefullTimeTax()
     cout << "Would you like to know the tax combined for the year?" << endl;
     cout << "[1] Yes" << endl;
     cout << "[2] No" << endl;
-    cin >> option;
+    
+    do
+    {
+        cout << "Enter option: ";
+        cin >> option;
+    } while (option < 1 || option > 2);
+
     system("cls");
 
     switch (option)
@@ -622,13 +661,17 @@ long corporateTax()
     gross_Income = net_Sales - gross_Sales;
     net_Income = gross_Income - allowable_Deductions;
 
-    cout << "Enter the tax option: " << endl; 
     cout << "[1] Domestic Corporation" << endl;
     cout << "[2] Resident Foreign Corporation" << endl; //Display choices for corporate tax
     cout << "[3] Non-Resident Foreign Corporation" << endl;
     cout << "[4] Offshore Banking Units (OBU's)" << endl;
     cout << "[5] Regional Operating Headquarters (ROHQ)" << endl;
-    cin >> option;
+    
+    do
+    {
+        cout << "Enter option: ";
+        cin >> option;
+    } while (option < 1 || option > 5);
 
     switch (option)
     {
@@ -692,13 +735,185 @@ long corporateTax()
             else
             {
                 cout << "No withholding Tax.";
-                return 0;
+                
             }
         default:
             cout << "Invalid option.";
-            return 0;        
+                   
     }
+    ChooseOption();  
 }
+long propertyTax()
+{   
+    int option, choice;
+
+    cout << "What type of property tax would you like to calculate?" << endl;
+    cout << "[1] Real Property Tax" << endl;
+    cout << "[2] Transfer Tax" << endl;
+    cout << "[3] Estate Tax" << endl;
+    cout << "[4] Idle Land Tax" << endl;
+    do
+    {
+        cout << "Enter option: ";
+        cin >> option;
+    } while (option < 1 || option > 4);
+    
+    switch (option)
+    {
+        case 1:
+            //Real Property Tax
+            system("clear");
+            long assessed_ValueofLot, assessed_ValueofImprovements;
+            cout << "Enter the assessed value of the lot: "; // Asks for the assessed value of the lot
+            cin >> assessed_ValueofLot;
+            cout << "Enter the assessed value of the house/improvements: "; // Asks for the assessed value of the improvements
+            cin >> assessed_ValueofImprovements;
+            system ("clear");
+
+            cout << "[1] Metro Manila" << endl;
+            cout << "[2] Provincial" << endl;
+
+            do
+            {
+                cout << "Enter option: ";
+                cin >> choice;
+            } while (choice < 1 || choice > 2);
+
+            if (choice == 1)
+            {
+                long x = (assessed_ValueofLot + assessed_ValueofImprovements) * 0.02;
+                cout << "Your real property tax is: " << x << endl;
+                cout << x << endl;
+            }
+            else if (choice == 2)
+            {
+                long x = (assessed_ValueofLot + assessed_ValueofImprovements) * 0.01;
+                cout << "Your real property tax is: " << x << endl;
+                cout << x << endl;
+            }
+            else
+            {
+                cout << "Invalid option.";
+                
+            }
+        case 2:
+            system("clear");
+            long x, y, z;
+            cout << "Enter the zonal value of the property: "; // Asks for the zonal value of the property
+            cin >> z;
+            cout << "Enter the fair market value of the property: "; // Asks for the fair market value of the property
+            cin >> y;
+            
+            cout << "[1] Metro Manila" << endl;
+            cout << "[2] Other Cities" << endl;
+
+            do
+            {
+                cout << "Enter option: ";
+                cin >> choice;
+            } while (choice < 1 || choice > 2);
+
+            if (choice == 1)
+            {
+                x = (z + y) * 0.05;
+                cout << "Your transfer tax is: " << x << endl;
+                cout << x << endl;
+            }
+            else if (choice == 2)
+            {
+                x = (z + y) * 0.75;
+                cout << "Your transfer tax is: " << x << endl;
+                cout << x << endl;
+            }
+            else
+            {
+                cout << "Invalid option.";
+                
+    
+            } 
+        case 3:
+            //Estate Tax
+            system("clear");
+            long net_Estate, gross_Estate;
+            cout << "Enter the net estate: "; // Asks for the net estate
+            cin >> net_Estate;
+            cout << "Enter the gross estate: "; // Asks for the gross estate
+            cin >> gross_Estate;
+            x = (net_Estate * 0.06);
+            cout << "Your estate tax is: " << x << endl;
+            cout << x << endl;  
+        case 4:
+            //Idle Land Tax
+            system("clear");
+            long assessed_ValueofLand, fair_MarketValueofLand;
+            cout << "Enter the fair market value of the land: "; // Asks for the fair market value of the land
+            cin >> fair_MarketValueofLand;
+
+            cout << "What is the classification of the land?" << endl;
+            cout << "[1] Agricultural" << endl;
+            cout << "[2] Residential" << endl;
+            cout << "[3] Commercial" << endl;
+            cout << "[4] Industrial" << endl;
+            cout << "[5] Mineral" << endl;
+            cout << "[6] Timberland" << endl;
+            do
+            {
+                cout << "Enter option: ";
+                cin >> choice;
+            } while (choice < 1 || choice > 6);
+            
+
+            if (choice == 1)
+            {
+                assessed_ValueofLand = (fair_MarketValueofLand * 0.2);
+                x = assessed_ValueofLand * 0.05;
+                cout << "Your idle land tax is: " << x << endl;
+                cout << x << endl;
+            }
+            else if (choice == 2)
+            {
+                assessed_ValueofLand = (fair_MarketValueofLand * 0.2);
+                x = assessed_ValueofLand * 0.05;
+                cout << "Your idle land tax is: " << x << endl;
+                cout << x << endl;
+            }
+            else if (choice == 3)
+            {
+                assessed_ValueofLand = (fair_MarketValueofLand * 0.5);
+                x = assessed_ValueofLand * 0.05;
+                cout << "Your idle land tax is: " << x << endl;
+                cout << x << endl;
+            }
+            else if (choice == 4)
+            {
+                assessed_ValueofLand = (fair_MarketValueofLand * 0.5);
+                x = assessed_ValueofLand * 0.05;
+                cout << "Your idle land tax is: " << x << endl;
+                cout << x << endl;
+            }
+            else if (choice == 5)
+            {
+                assessed_ValueofLand = (fair_MarketValueofLand * 0.5);
+                x = assessed_ValueofLand * 0.05;
+                cout << "Your idle land tax is: " << x << endl;
+                cout << x << endl;
+            }
+            else if (choice == 6)
+            {
+                assessed_ValueofLand = (fair_MarketValueofLand * 0.4);
+                x = assessed_ValueofLand * 0.05;
+                cout << "Your idle land tax is: " << x << endl;
+                cout << x << endl;
+            }
+            else
+            {
+                cout << "Invalid option.";
+                return 0;
+            }     
+    }
+    ChooseOption();  
+}
+
 
 bool MatchUsernameDataBase(string username){
     ifstream UsernameOutput("usernames.txt"); // opens username textfile for reading 
