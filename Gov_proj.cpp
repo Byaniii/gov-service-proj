@@ -11,11 +11,10 @@ using namespace std;
 
 // Global Variables
 int tin, profile_count = 0;
-double monthly1Salary = 0;
+long monthly1Salary = 0;
 string UserName;
 
 // Function Prototypes 
-bool validSalary(const string& input);
 void Start_Menu();
 void Main_Menu();
 void registration();
@@ -24,22 +23,22 @@ void IncorrectLogin();
 void register_profile();
 void View_Profile();
 void TIN();
-double thirteenmonthpay(double salary);
-double annual_salary(double salary);
-double tax_incomeTable(int choose, double ms, double thirteenmonthpay);
-double regular_Tax(double monthly1Salary, double tmp, double AS);
-double valueAddedTax();
-double partTimefullTimeTax();
-double combinedTax();
+long thirteenmonthpay(long salary);
+long annual_salary(long salary);
+long tax_incomeTable(int choose, long ms, long thirteenmonthpay);
+long regular_Tax(long monthly1Salary, long tmp, long AS);
+long valueAddedTax();
+long partTimefullTimeTax();
 long corporateTax();
 bool UserNameValid(string UserInput);
 bool MatchUsernameDataBase(string Username);
 bool ValidPhoneNumber(string UserPhoneNumber);
+void ChooseOption();
 
 // Struct for User Profile
 struct Profile{
 	string name, address, phone_number;
-	double monthly1salary;
+	long monthly1salary;
 };
 
 
@@ -266,7 +265,7 @@ void register_profile(){
 
 	while(!PhoneNumberIsValid){ // Loop repeats if user is unable to meet criteria
         system("cls");
-        cout << "Enter Phone Number(Must not be empty/whitespace/alphabetical): ";
+        cout << "Enter Phone Number(Must not be empty/whitespace/alphabetical/special character): ";
 	    getline(cin, profile.phone_number);
         PhoneNumberIsValid = (ValidPhoneNumber(profile.phone_number)); // (boolean value) Validates Phone Number (Not empty/whitespace/letter)
     }
@@ -289,81 +288,56 @@ void register_profile(){
     } while (true);
     
 	profile_input << profile.name <<endl<< profile.address <<endl<< profile.phone_number <<endl<< profile.monthly1salary<<endl;
-	profile_input.close();
+    long long AnnualSalaryTax;
+    AnnualSalaryTax = annual_salary(profile.monthly1salary);
+    profile_input << AnnualSalaryTax<<endl;
+    profile_input.close();
     Start_Menu();
 }
 
-void View_Profile(){ // NEEDS TO BE UPDATED
-    system("cls");
-	string output, tempfile2;
-    int count = 0;
-	ifstream profile_output("profiles.txt"), AnnualSalaryOutput("AnnualSalaryDataBase.txt"); // opens profiles and AnnualSalaryDataBase for reading
-	while(getline(profile_output,output)){
-        if (count < 4){
-        switch(count){
-            case 0:
-            cout << "Name: ";
-            break;
-            case 1:
-            cout << "Address: ";
-            break;
-            case 2:
-            cout << "Phone Number: ";
-            break;
-            case 3:
-            cout << "Monthly Salary: ";
-            break;
-            case 4:
-            cout << "Annual Salary: ";
-        }
-        cout << output << endl;
-        count ++; // increments count for displaying user profile
-	    }
-    }
-	profile_output.close(); // closes text file
-    int option;
-    cout << "=================Program  Name=================\n"; // Name of Program
-    cout << "[1] MAIN MENU\n";
-    cout << "[2] LOG-OUT\n";
-    cout << "[3] EXIT PROGRAM\n";
-    cout << "Enter option: ";
-    cin >> option;
-    
-    switch(option){
-        case 1:
-            Main_Menu();
-            break;
-        case 2:
-            Start_Menu();
-            break;
-        case 3:
-            return;
-        default:
-            system("color 04"); // changes system color
-            cout << "\nPlease enter a valid option!\n";
-            system("color 03"); // changes system color 
+void View_Profile() {
+    system("cls");  // Clear the console screen
+    ifstream ProfileOutput("profiles.txt");
+    string line;
+    int tempcount = 1;  // Initialize tempcount to 1
+    int linesToPrint = 5; 
+    int starting_line = (profile_count - 1) * linesToPrint + 1;  
+    while (getline(ProfileOutput, line)) {
+        if (tempcount >= starting_line && tempcount < starting_line + linesToPrint) {
             
-            View_Profile(); // Calls view profile function 
+            switch (tempcount - starting_line) {
+                case 0:
+                    cout << "Name: " << line << endl;
+                    break;
+                case 1:
+                    cout << "Address: " << line << endl;
+                    break;
+                case 2:
+                    cout << "Phone Number: " << line << endl;
+                    break;
+                case 3:
+                    cout << "Monthly Salary: " << line << endl;
+                    break;
+                case 4:
+                    cout << "Annual Salary: " << line << endl;
+                    break;
+            }
+        } else if (tempcount >= starting_line + linesToPrint) {
+            break;
+        }
+        tempcount++; 
     }
-
+    ProfileOutput.close();
+    ChooseOption();
 }
 
-void TIN () //This function will display the TIN number and the details of the user
-{
-	int tin;
-    srand(time(0)); 
-	int tin1 = rand() % 1000 + 1; //Generates a random number for the TIN number
-	int tin2 = rand() % 1000 + 1;
-	int tin3 = rand() % 1000 + 1;
-    system("cls");
-	cout << "Your TIN number is: " << tin1 << "-" << tin2 << "-" << tin3 << "-" << "00000" <<endl<< endl;	
+void ChooseOption(){
     int option;
     cout << "=================Program  Name=================\n"; // Name of Program
     cout << "[1] MAIN MENU\n";
     cout << "[2] LOG-OUT\n";
     cout << "Enter option: ";
-    cin >> option;
-    
+    cin >> option;    
     switch(option){
         case 1:
             Main_Menu(); // Calls Main Menu Function
@@ -374,59 +348,79 @@ void TIN () //This function will display the TIN number and the details of the u
         default:
             system("color 04"); // Changes system color 
             cout << "\nPlease enter a valid option!\n";
-            system("color 03"); // Cahnges system color 
-            
+            system("color 03"); // Cahnges system color             
             Main_Menu(); // Calls Main Menu function
     }
 }
-double thirteenmonthpay(double salary){
+
+void GenerateTinNumber(){
+    ofstream InputTinNumber("TinDataBase.txt", ios::app);
+    int tin;
+    srand(time(0)); 
+	int tin1 = rand() % 1000 + 1; //Generates a random number for the TIN number
+	int tin2 = rand() % 1000 + 1;
+	int tin3 = rand() % 1000 + 1;
+    InputTinNumber << tin1 << "-" << tin2 << "-" << tin3 << "-" << "00000" <<endl;
+    InputTinNumber.close();
+    ChooseOption();
+}
+
+
+void TIN () //This function will display the TIN number and the details of the user
+{
+    ifstream OutputTinNumber("TinDataBase.txt", ios::app);
+    system("cls");
+    
+	//cout << "Your TIN number is: " << tin1 << "-" << tin2 << "-" << tin3 << "-" << "00000" <<endl<< endl;	
+}
+long thirteenmonthpay(long salary){ //This function will calculate the 13th month pay
     if(salary > 90000)
     {
-        double monthly_salary = salary - 90000;
+        long monthly_salary = salary - 90000; 
         return monthly_salary;
     }
     else
     {
-        double monthly_salary = 0;
+        long monthly_salary = 0;
         return monthly_salary;
     }
     return salary;
 }
-double annual_salary(double salary){
+long annual_salary(long salary){ //This function will calculate the annual salary
     int x = salary * 12;
     return x;
 }
-double tax_incomeTable(int choose, double ms, double thirteenmonthpay) //This function represents the latest tax table from BIR
+long tax_incomeTable(int choose, long ms, long thirteenmonthpay) //This function represents the latest tax table from BIR
 {
-    double mS = ms;
-    double MS = ms * 12 + thirteenmonthpay;
+    long mS = ms;
+    long MS = ms * 12 + thirteenmonthpay;
     switch(choose)
     {
         case 1:
-            cout<<"Your monthly tax is: ";
+            cout<<"Your monthly tax is: "; //Displays monthly tax based on if ladder criteria
             if (mS>=666667)
             {
-                double x = ((ms - 666667) * 0.35) + 200833.33;
+                long x = ((ms - 666667) * 0.35) + 200833.33;
                 return x;
             }
             else if (mS<=666666 && mS>=166667)
             {
-                double x = ((ms - 166667 ) * 0.30) + 40833.33;
+                long x = ((ms - 166667 ) * 0.30) + 40833.33; 
                 return x;
             }
             else if (mS<=166667 && mS>= 66667)
             {
-                double x = ((ms - 66667) * 0.25) + 10833.33;
+                long x = ((ms - 66667) * 0.25) + 10833.33;
                 return x;
             }
             else if (mS<=66666 && mS>=33333)
             {
-                double x = ((ms - 66666) * 0.20) + 2500;
+                long x = ((ms - 66666) * 0.20) + 2500;
                 return x;
             }   
             else if (mS<=33332 && mS>=20833)
             {
-                double x = ((ms - 33332) * 0.15);
+                long x = ((ms - 33332) * 0.15);
                 return x;
             }
             else 
@@ -435,30 +429,30 @@ double tax_incomeTable(int choose, double ms, double thirteenmonthpay) //This fu
                 return 0;
             }
         case 2:
-            cout<<"Your annual tax is: ";
+            cout<<"Your annual tax is: "; //Displays annual tax based on if ladder criteria
             if (MS>=8000000)
             {
-                double x = ((MS - 8000000) * 0.35) + 2410000;
+                long x = ((MS - 8000000) * 0.35) + 2410000;
                 return x;
             }
             else if (MS<=8000000 && MS>=2000000)
             {
-                double x = ((MS - 2000000) * 0.32) + 490000;
+                long x = ((MS - 2000000) * 0.32) + 490000;
                 return x;
             }
             else if (MS<=2000000 && MS>=800000)
             {
-                double x = ((MS - 800000) * 0.30) + 130000;
+                long x = ((MS - 800000) * 0.30) + 130000;
                 return x;
             }
             else if (MS<=800000 && MS>=400000)
             {
-                double x = ((MS - 400000) * 0.25) + 30000;
+                long x = ((MS - 400000) * 0.25) + 30000;
                 return x;
             }
             else if (MS<=400000 && MS>=250000)
             {
-                double x = ((MS - 250000) * 0.20);
+                long x = ((MS - 250000) * 0.20);
                 return x;
             }
             else
@@ -469,7 +463,7 @@ double tax_incomeTable(int choose, double ms, double thirteenmonthpay) //This fu
     }
 }
 
-double regular_Tax(double monthly1Salary, double tmp, double AS)
+long regular_Tax(long monthly1Salary, long tmp, long AS)
 {
     string line, tempvar;
     int choice, count = 0, tempint;
@@ -486,121 +480,151 @@ double regular_Tax(double monthly1Salary, double tmp, double AS)
     while(getline(MonthlySalaryOutput, line)){ // extracts from MonthlySalaryOutput into line
         count++;
         if (count == tempint){
-            monthly1Salary = stod(line);        // connverts stream in double    
+            monthly1Salary = stod(line);        // connverts stream in long    
         }
     }
-
-tmp = thirteenmonthpay(monthly1Salary);
-ofstream AnnualSalaryInput("AnnualSalaryDatabase.txt", ios::app); // opens AnnualSalaryDatabase.txt for appending
+tmp = thirteenmonthpay(monthly1Salary); // opens AnnualSalaryDatabase.txt for appending
 AS = annual_salary(monthly1Salary);      
 cout << "\n"; //Displays output of the entire program
-cout << "Monthly Salary: " << monthly1Salary << endl;
-cout << "Your annual salary: " << AS << endl;
+cout << "Monthly Salary: " << monthly1Salary << endl; //Displays monthly salary
+cout << "Your annual salary: " << AS << endl; //Displays annual salary
 cout << tax_incomeTable(choice, monthly1Salary, tmp) << endl;
-AnnualSalaryInput << AS << endl; // writes/appends to text file
-AnnualSalaryInput.close(); // closes text file
-    int option;
-    cout << "=================Program  Name=================\n"; // Name of Program
-    cout << "[1] MAIN MENU\n";
-    cout << "[2] LOG-OUT\n";
-    cout << "Enter option: ";
-    cin >> option;
-    
-    switch(option){
-        case 1:
-            Main_Menu();
-            break;
-        case 2:
-            Start_Menu();
-            break;
-        default:
-            system("color 04");
-            cout << "\nPlease enter a valid option!\n";
-            system("color 03");
-            
-            Main_Menu();
-    }
+    ChooseOption();
+    return monthly1Salary, tmp, AS;
 }
 
-double valueAddedTax()
+long valueAddedTax()
 {
-    double product;
-    cout << "Enter the price of the product: ";
+    long product;
+    cout << "Enter the price of the product: "; // Asks for the price of the product
     cin >> product;
-    double x = product * 0.12;
-    cout << "The value added tax of the product is: " << x << endl;
-    return x;
+    long x = product * 0.12; // Calculates the value added tax
+    cout << "The value added tax of the product is: " << x << endl; // Displays the value added tax
+    return x; 
 }
 
-double partTimefullTimeTax()
+long partTimefullTimeTax()
 {
-    float annual_halfpartTimeFulltime_salary;
-    double salary1, salary2, halfannual1Salary, halfannual2Salary, fullannualSalary, full_Salary, totalSalary;
-    cout << "Enter your full-time salary: ";
+    int option;
+    long annual_halfpartTimeFulltime_salary, salary1, salary2, halfannual1Salary, halfannual2Salary, fullannualSalary, full_Salary, totalSalary;
+    cout << "Enter your full-time salary: "; // Asks for the full-time salary
     cin >> salary1;
-    cout << "Enter your part-time salary: ";
+    cout << "Enter your part-time salary: "; // Asks for the part-time salary
     cin >> salary2;
     totalSalary = salary1 + salary2;
-    thirteenmonthpay(totalSalary);
+    thirteenmonthpay(totalSalary); // Calculates the 13th month pay
     fullannualSalary = salary1 * 12;
     salary1 *= 6;
     salary2 *= 6;
     annual_halfpartTimeFulltime_salary = salary1 + salary2;
-    cout << "Your annual salary is: " << annual_halfpartTimeFulltime_salary << endl;
+    cout << "Your annual salary is: " << annual_halfpartTimeFulltime_salary << endl; // Displays the annual salary
 
-    cout << "Your Tax due is: " << endl;
+    cout << "Your Tax due is: " << endl; // Displays the tax due based on criteria
     if (annual_halfpartTimeFulltime_salary>=8000000)
     {
-        double x = ((annual_halfpartTimeFulltime_salary - 8000000) * 0.35) + 2410000;
-        return x;
+        long x = ((annual_halfpartTimeFulltime_salary - 8000000) * 0.35) + 2410000;
+        cout << x;
     }
     
     else if (annual_halfpartTimeFulltime_salary<=8000000 && annual_halfpartTimeFulltime_salary>=2000000)
     {
-        double x = ((annual_halfpartTimeFulltime_salary - 2000000) * 0.32) + 490000;
-        return x;
+        long x = ((annual_halfpartTimeFulltime_salary - 2000000) * 0.32) + 490000;
+        cout << x<<endl;                                                                                      //Criteria for cout << x;
     }
-    
     else if (annual_halfpartTimeFulltime_salary<=2000000 && annual_halfpartTimeFulltime_salary>=800000)
     {
-        double x = ((annual_halfpartTimeFulltime_salary - 800000) * 0.30) + 130000;
-        return x;
+        long x = ((annual_halfpartTimeFulltime_salary - 800000) * 0.30) + 130000;
+        cout << x<<endl;
     }
     
     else if (annual_halfpartTimeFulltime_salary<=800000 && annual_halfpartTimeFulltime_salary>=400000)
     {
-        double x = ((annual_halfpartTimeFulltime_salary - 400000) * 0.25) + 30000;
-        return x;
+        long x = ((annual_halfpartTimeFulltime_salary - 400000) * 0.25) + 30000;
+        cout << x<<endl;
     }
     else if (annual_halfpartTimeFulltime_salary<=400000 && annual_halfpartTimeFulltime_salary>=250000)
     {
-        double x = ((annual_halfpartTimeFulltime_salary - 250000) * 0.20);
-        return x;
+        long x = ((annual_halfpartTimeFulltime_salary - 250000) * 0.20);
+        cout << x<<endl;
     }
     else
     {
         cout<<"No withholding tax." << endl;
-        return 0;
     }
+    
+    
+    cout << "Would you like to know the tax combined for the year?" << endl;
+    cout << "[1] Yes" << endl;
+    cout << "[2] No" << endl;
+    cin >> option;
+    system("cls");
+
+    switch (option)
+    {
+        case 1:
+        if (fullannualSalary>=8000000)
+    {
+        long x = ((fullannualSalary - 8000000) * 0.35) + 2410000;
+        cout << "Your Combined Tax due is: " << x << endl;
+        cout << x << endl;
+    }
+    
+    else if (fullannualSalary<=8000000 && fullannualSalary>=2000000)
+    {
+        long x = ((fullannualSalary - 2000000) * 0.32) + 490000;
+        cout << "Your Combined Tax due is: " << x << endl;
+        cout << x << endl;
+    }
+
+    else if (fullannualSalary<=2000000 && fullannualSalary>=800000)                 //Criteria for combined tax due
+    {
+        long x = ((fullannualSalary - 800000) * 0.30) + 130000;
+        cout << "Your Combined Tax due is: " << x << endl;
+        cout << x << endl;
+    }
+
+    else if (fullannualSalary<=800000 && fullannualSalary>=400000)
+    {
+        long x = ((fullannualSalary - 400000) * 0.25) + 30000;
+        cout << "Your Combined Tax due is: " << x << endl;
+        cout << x << endl;
+    }
+
+    else if (fullannualSalary<=400000 && fullannualSalary>=250000)
+    {
+        long x = ((fullannualSalary - 250000) * 0.20);
+        cout << "Your Combined Tax due is: " << x << endl;
+        cout << x << endl;
+    }
+
+    else
+    {
+        cout<<"No withholding tax." << endl;
+    }
+
+    case 2:
+        cout << "Thank you for using the part-time/full-time tax calculator." << endl;
+    }
+    ChooseOption();
 }
 
 long corporateTax()
 {
     int option;
     long net_Sales, gross_Sales, gross_Income, allowable_Deductions, net_Income, mcit;
-    cout << "Enter the net sales: ";
-    cin >> net_Sales;
-    cout << "Enter the gross sales: ";
+    cout << "Enter the net sales: "; // Asks for the net sales
+    cin >> net_Sales; 
+    cout << "Enter the gross sales: "; // Asks for the gross sales
     cin >> gross_Sales;
-    cout << "Enter the allowable deductions: ";
+    cout << "Enter the allowable deductions: "; // Asks for the allowable deductions
     cin >> allowable_Deductions;
 
     gross_Income = net_Sales - gross_Sales;
     net_Income = gross_Income - allowable_Deductions;
 
-    cout << "Enter the tax option: " << endl;
+    cout << "Enter the tax option: " << endl; 
     cout << "[1] Domestic Corporation" << endl;
-    cout << "[2] Resident Foreign Corporation" << endl;
+    cout << "[2] Resident Foreign Corporation" << endl; //Display choices for corporate tax
     cout << "[3] Non-Resident Foreign Corporation" << endl;
     cout << "[4] Offshore Banking Units (OBU's)" << endl;
     cout << "[5] Regional Operating Headquarters (ROHQ)" << endl;
@@ -613,61 +637,57 @@ long corporateTax()
             {
                 long x = (net_Income * 0.25);
                 cout << "Your corporate tax is: " << x << endl;
-                return x;
+                cout << x << endl;
             }
             else if (net_Income <= 100000000 && net_Income >= 5000000)
             {
                 long x = (net_Income * 0.20);
                 cout << "Your corporate tax is: " << x << endl;
-                return x;
+                cout << x << endl;
             }
             else
             {
-                cout << "No withholding Tax.";
-                return 0;
+                cout << "No withholding Tax.";                                                          //Switch case ladder for corporate tax
             }
         case 2:
             if (net_Income > 1000000000)
             {
                 long x = (net_Income * 0.25);
                 cout << "Your corporate tax is: " << x << endl;
-                return x;
+                cout << x << endl;
             }
             else
             {
                 cout << "No withholding Tax.";
-                return 0;
             }
         case 3:
             if (net_Income > 100000000)
             {
                 long x = (net_Income * 0.25);
                 cout << "Your corporate tax is: " << x << endl;
-                return x;
+                cout << x << endl;
             }
             else
             {
                 cout << "No withholding Tax.";
-                return 0;
             }
         case 4:
             if (net_Income > 100000000)
             {
                 long x = (net_Income * 0.25);
                 cout << "Your corporate tax is: " << x << endl;
-                return x;
+                cout << x << endl;
             }
             else
             {
                 cout << "No withholding Tax.";
-                return 0;
             }
         case 5:
             if (net_Income > 100000000)
             {
                 long x = (net_Income * 0.25);
                 cout << "Your corporate tax is: " << x << endl;
-                return x;
+                cout << x << endl;
             }
             else
             {
@@ -676,13 +696,12 @@ long corporateTax()
             }
         default:
             cout << "Invalid option.";
-            return 0;
+            return 0;        
     }
 }
 
 bool MatchUsernameDataBase(string username){
     ifstream UsernameOutput("usernames.txt"); // opens username textfile for reading 
-
     bool found = false;
     string line, UserComparison;
     while (getline(UsernameOutput, line)){ // while loop determining if user registration entry matches database(returns invalid if true)
@@ -712,7 +731,7 @@ bool UserNameValid(string UserInput){ // Function to check if username registrat
 
 bool ValidPhoneNumber(string UserPhoneNumber){ // Function to check if Phone number has letters/whitespaces(invalid)
     for (int i = 0; i < UserPhoneNumber.length(); i++){
-        if(isalpha(UserPhoneNumber[i]) || (isspace(UserPhoneNumber[i]))){ // no whitespace/letter for any index in string
+        if(isalpha(UserPhoneNumber[i]) || (isspace(UserPhoneNumber[i])) || (ispunct(UserPhoneNumber[i]))){ // no whitespace/letter for any index in string
             return false; // returns false (Phone Number is not valid)
         }
     }
